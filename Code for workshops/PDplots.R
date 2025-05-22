@@ -1,6 +1,6 @@
 library(ggplot2)
 
-# Set parameters for the normal distribution
+# Set parameters for the normal distribution ####
 mu <- 0      # mean
 sigma <- 1   # standard deviation
 
@@ -73,3 +73,101 @@ ggplot(curve_data, aes(x = x, y = density)) +
              color = "red", linetype = "dashed", size = 1) +
   facet_wrap(~ group, nrow = 2) +
   theme_bw(base_size = 18)
+
+# neg binom histos ####
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Define parameters for four Negative Binomial distributions
+params <- tibble(
+  mu  = c(5, 5, 10, 10),
+  phi = c(1, 5, 1, 5)
+) %>%
+  mutate(label = paste0("mu = ", mu, ", phi = ", phi))
+
+# Generate data: x from 0 to some max count
+max_x <- 30
+
+# Function to compute NB pmf for given mu and phi
+# Note: In R, Negative Binomial uses size parameter = phi,
+# and prob = phi / (mu + phi)
+get_nb_pmf <- function(x, mu, phi) {
+  size <- phi
+  prob <- phi / (mu + phi)
+  dnbinom(x, size = size, prob = prob)
+}
+
+# Create data frame with pmf values for each combination
+plot_data <- params %>%
+  rowwise() %>%
+  do({
+    tibble(
+      x = 0:max_x,
+      pmf = get_nb_pmf(0:max_x, .$mu, .$phi),
+      label = .$label,
+      mu = .$mu,
+      phi = .$phi
+    )
+  }) %>%
+  ungroup()
+
+# Plot
+nbplot <- ggplot(plot_data, aes(x = x, y = pmf)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  facet_wrap(~ label, ncol = 2) +
+  labs(
+    title = "Negative Binomial Distributions with Varying mu and phi",
+    x = "Count (x)",
+    y = "Probability Mass Function (PMF)"
+  ) +
+  theme_bw(base_size = 16) +
+  theme(strip.text = element_text(size = 12))
+ggsave(nbplot, file="nbplot.tiff", width=8, height=6, dpi=600, compression = "lzw")
+
+## plots for bealls.webworm example ####
+### add normal density curve -- mean is about right, but variance way off ####
+d1$logy <- log(d1$y+1)
+
+ggplot(d1, aes(x=logy))+
+  geom_histogram(aes(y = ..density..), binwidth = .5, fill="grey75", color="white")+
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(d1$logy),
+      sd = sd(d1$logy)),
+    color = "red", linetype = "solid", size = 2) +
+  #facet_wrap(~trt)+
+  theme_bw(base_size = 20)+
+  expand_limits(x = -1)
+
+## Try a poisson distribution ####
+lambda <- mean(d1$y)
+xvals <- seq(min(d1$y), max(d1$y))
+pois_df <- data.frame(
+  y = xvals,
+  dens = dpois(xvals, lambda = lambda))
+
+ggplot(d1, aes(x=y))+
+  geom_histogram(aes(y = ..density..), binwidth = 1, fill="grey75", color="white")+
+  geom_line(data = pois_df, aes(x = y, y = dens), color = "purple", size = 2, linetype = "solid") +
+  #facet_wrap(~trt)+
+  theme_bw(base_size = 20)
+
+## Add NB density curve -- fits well over the zeros ####
+mu <- mean(d1$y)
+var <- var(d1$y)
+size <- mu^2 / (var - mu)      # size (dispersion)
+prob <- size / (size + mu)     # probability
+
+pois_df2 <- data.frame(
+  y = xvals,
+  Poisson = dpois(xvals, lambda = lambda),
+  NegBinom = dnbinom(xvals, size = size, mu = mu))
+
+ggplot(d1, aes(x=y))+
+  geom_histogram(aes(y = ..density..), binwidth = 1, fill="grey75", color="white")+
+  geom_line(data = pois_df2, aes(x = y, y = Poisson), color = "purple", size = 2, linetype = "solid") +
+  geom_line(data = pois_df2, aes(x = y, y = NegBinom), color = "green", size = 2, linetype = "dashed") +  
+  #facet_wrap(~trt)+
+  theme_bw(base_size = 20)

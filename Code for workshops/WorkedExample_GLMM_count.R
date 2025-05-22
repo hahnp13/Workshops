@@ -1,13 +1,11 @@
-# GLMMs  ##########################################
+# worked example of GLMMs  ##########################################
+## load libraries; make sure all packages are installed #############
 library(tidyverse)
 library(emmeans)
 library(car)
 library(agridat)
 library(glmmTMB)
 library(DHARMa)
-library(performance)
-library(MuMIn)
-library(bbmle)
 library(easystats)
 
 # Beall webworm data example ####
@@ -20,9 +18,10 @@ d1 <- beall.webworms
 ?beall.webworms  ## info about the beall.webworms dataset
 head(d1) ## view data set
 
-# 0. examine plot of data ####
+# STEP 0. examine plot of data ####
 hist(d1$y)
 
+## histogram of data, lots of zero's and one's, highly skewed
 ggplot(d1, aes(x=y))+
   geom_histogram(binwidth = 1, fill="grey75", color="white")+
   #facet_wrap(~trt)+
@@ -34,127 +33,84 @@ ggplot(d1, aes(x=log(y+1)))+
   #facet_wrap(~trt)+
   theme_bw(base_size = 20)
 
-### add normal density curve -- mean is about right, but variance way off ####
-d1$logy <- log(d1$y+1)
 
-ggplot(d1, aes(x=logy))+
-  geom_histogram(aes(y = ..density..), binwidth = .5, fill="grey75", color="white")+
-  stat_function(
-    fun = dnorm,
-    args = list(
-      mean = mean(d1$logy),
-      sd = sd(d1$logy)),
-    color = "red", linetype = "solid", size = 2) +
-  #facet_wrap(~trt)+
-  theme_bw(base_size = 20)+
-  expand_limits(x = -1)
-
-## Try a poisson distribution ####
-lambda <- mean(d1$y)
-xvals <- seq(min(d1$y), max(d1$y))
-pois_df <- data.frame(
-  y = xvals,
-  dens = dpois(xvals, lambda = lambda))
-
-ggplot(d1, aes(x=y))+
-  geom_histogram(aes(y = ..density..), binwidth = 1, fill="grey75", color="white")+
-  geom_line(data = pois_df, aes(x = y, y = dens), color = "purple", size = 2, linetype = "solid") +
-  #facet_wrap(~trt)+
-  theme_bw(base_size = 20)
-
-## Add NB density curve -- fits well over the zeros ####
-mu <- mean(d1$y)
-var <- var(d1$y)
-size <- mu^2 / (var - mu)      # size (dispersion)
-prob <- size / (size + mu)     # probability
-
-pois_df2 <- data.frame(
-  y = xvals,
-  Poisson = dpois(xvals, lambda = lambda),
-  NegBinom = dnbinom(xvals, size = size, mu = mu))
-
-ggplot(d1, aes(x=y))+
-  geom_histogram(aes(y = ..density..), binwidth = 1, fill="grey75", color="white")+
-  geom_line(data = pois_df2, aes(x = y, y = Poisson), color = "purple", size = 2, linetype = "solid") +
-  geom_line(data = pois_df2, aes(x = y, y = NegBinom), color = "green", size = 2, linetype = "dashed") +  
-  #facet_wrap(~trt)+
-  theme_bw(base_size = 20)
-
-## also there are nine blocks that differ
+## also there are thirteen blocks that differ
 ggplot(d1, aes(x=spray, y=y, fill=lead)) + 
   geom_boxplot() + 
   geom_point(position = position_jitterdodge(jitter.width=.5, jitter.height=.1, dodge.width = 1), alpha=.2)+
-  facet_wrap(~block)
+  facet_wrap(~block)+
+  theme_bw(base_size = 18)
 
 
 
-# STEP 1. construct poisson and negative binomial models ####
-r0 <- glmmTMB(log(y+1) ~ spray * lead , data=d1, family="gaussian") # log-transformed model, bad bad bad
-r1 <- glmmTMB(y ~ spray * lead , data=d1, family="poisson") # poisson model
-r2 <- glmmTMB(y ~ spray * lead , data=d1, family="nbinom2") # negative binomial model
+# STEP 1. construct basic model ####
+mod_logtrans <- glmmTMB(log(y+1) ~ spray * lead , data=d1) # log-transformed model, bad bad bad
+
 
 # STEP 2. Examine residuals and test for overdispersion ####
-
 ## check residuals from the log-transformed model ####
-plot(resid(r0)~fitted(r0))  ## residuals should be evenly dispersed
+plot(resid(mod_logtrans)~fitted(mod_logtrans))  ## residuals should be evenly dispersed
 abline(h=0)
 
-qqPlot(resid(r0)) # points should line up on the line
+qqPlot(resid(mod_logtrans)) # points should line up on the line
 
-plot(simulateResiduals(r0)) ## DHARMa package simulated residuals
+plot(simulateResiduals(mod_logtrans)) ## DHARMa package simulated residuals
 
+## Step 1b. update model with poisson distribution for count data ####
+mod_poisson <- glmmTMB(y ~ spray * lead, family="poisson", data=d1) # poisson model
 
-## check residuals for poisson and negative binomial ####
-plot(simulateResiduals(r1)) ## DHARMa package simulated residuals
-check_overdispersion(r1) # overdispersion ratio calculator from performance
+### check residuals for poisson  ####
+plot(simulateResiduals(mod_poisson)) ## DHARMa package simulated residuals
+check_overdispersion(mod_poisson) # overdispersion ratio calculator from performance
 
-plot(simulateResiduals(r2)) ## DHARMa package simulated residuals
-check_overdispersion(r2) # overdispersion ratio calculator from performance
+## Step 1c. update to nbinom2 to correct for overdispersion ####
+mod_nbinom <- glmmTMB(y ~ spray * lead, family="nbinom2", data=d1) # negative binomial model
+
+plot(simulateResiduals(mod_nbinom)) ## DHARMa package simulated residuals
+check_overdispersion(mod_nbinom) # overdispersion ratio calculator from performance
+
 
 ## QUESTIONS: What's next? Any aspects of the experimental design missing from the model? ####
 ####            Construct a model that includes any missing factors.
 
-## 1. construct model (again!!) by adding the block as a random effect ####
-r3 <- glmmTMB(y ~ spray * lead + (1|block), data=d1, family="poisson")   ### poisson w/ block
-r4 <- glmmTMB(y ~ spray * lead + (1|block), data=d1, family="nbinom2")   ### nb w/ block
-
+## modify Step 1. construct model (again!!) by adding the block as a random effect ####
+mod_nbinom_blk <- glmmTMB(y ~ spray * lead + (1|block), data=d1, family="nbinom2")   ### nb w/ block
 
 
 ## 2. examine residuals ####
-plot(simulateResiduals(r3)) ## DHARMa package simulated residuals
-check_overdispersion(r3) # overdispersion ratio calculator from performance
-
-plot(simulateResiduals(r4)) ## DHARMa package simulated residuals
-check_overdispersion(r4) # overdispersion ratio calculator from performance
-
+plot(simulateResiduals(mod_nbinom_blk)) ## DHARMa package simulated residuals
+check_overdispersion(mod_nbinom_blk) # overdispersion ratio calculator from performance
 
 # STEP 3. Check model basics, fixed effects, random effects, family/link ####
-summary(r4)
+summary(mod_nbinom_blk)
 
 
-## Two models (r2 and r3) above differ only random effects. Fixed effects are the same.
+## The last two models differ only random effects. Fixed effects are the same.
 ## Can use AIC (or likelihood ratio) for selecting the most appropriate random effects.
-## If the random effect was part of your experimental design you don't need to do this (just keep block in!)
-AIC(r2, r4)   
-anova(r2, r4)
+## If the random effect was part of your experimental design you don't need to do this (just keep block in!; but we will demo)
+
+AIC(mod_nbinom, mod_nbinom_blk)  # compare AIC for models without and with block   
+anova(mod_nbinom, mod_nbinom_blk) # likelihood ratio test for models without and with block
+
 
 # STEP 4. Check significance ####
-Anova(r4)
-
-Anova(r2) ## compare with NB to poisson
+Anova(mod_nbinom_blk) # Anova function from car package
 
 
+# STEP 5. Calculate estimated marginal means using emmeans ####
+emmeans(mod_nbinom_blk, ~ spray:lead) # means on log-scale
+emmeans(mod_nbinom_blk, ~ spray:lead, type="response") # means on count-scale
 
+# STEP 6. Calculate contrasts, also using emmeans          ####
+emmeans(mod_nbinom_blk, pairwise ~ spray:lead, type="response") # means back-transformed 
 
-# STEP 5. Calculate emmeans ####
-# STEP 6. contrasts         ####
-emmeans(r4, pairwise ~ spray:lead) # means on log-scale
-
-emmeans(r4, pairwise ~ spray:lead, type="response") # means back-transformed 
-
+## if you want compact-letter display (note the messages): ####
+mod_emm <- emmeans(mod_nbinom_blk, ~ spray:lead, type="response")
+multcomp::cld(mod_emm, Letters="ABCD", alpha=.05)
 
 # STEP 7. Calculate R2m and R2c ####
-r2(r4)
+r2(mod_nbinom_blk)
+icc(mod_nbinom_blk)
 
 # STEP 8. Make figure ####
 
