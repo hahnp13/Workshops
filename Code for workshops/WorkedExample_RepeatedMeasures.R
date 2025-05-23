@@ -21,7 +21,6 @@ ggplot(data=wat, aes(x=day, y=water, color=species))+
   theme_bw(base_size = 16)
 
 #########################################################################################################
-#### QUESTION FOR R CHALLENGE 8 #########################################################################
 #### 1. Fit several models, one that accounts for tree ID as a regular random effect and one that accounts 
 ####     for temporal autocorrelation. Additionally, it seems like there is some non-linearity so try a quadratic term. 
 ####     Choose the right fixed effects to answer the question: do the species differ in water use and does this change through time?

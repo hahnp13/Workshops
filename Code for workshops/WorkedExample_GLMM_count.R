@@ -114,6 +114,9 @@ icc(mod_nbinom_blk)
 
 # STEP 8. Make figure ####
 
-## emmeans w/ data points
+## boxplot of original data
 
-## bar plot 
+## bar plot from emmeans with SE
+
+## emmeans point_range w/ data points w/ facet
+
