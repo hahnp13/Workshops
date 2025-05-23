@@ -171,3 +171,71 @@ ggplot(d1, aes(x=y))+
   geom_line(data = pois_df2, aes(x = y, y = NegBinom), color = "green", size = 2, linetype = "dashed") +  
   #facet_wrap(~trt)+
   theme_bw(base_size = 20)
+
+## F-dist and X2 dist plots ####
+
+# F-distribution density function over x
+plot_f_distribution <- function(df1, df2) {
+  x <- seq(0, 5, length.out = 500)
+  y <- df(x, df1, df2)
+  data.frame(x = x, y = y, df1 = as.factor(df1), df2 = as.factor(df2))
+}
+
+# Create data for two settings
+df_data <- rbind(
+  plot_f_distribution(5, 5),
+  plot_f_distribution(10, 15)
+)
+
+ggplot(df_data, aes(x = x, y = y, color = interaction(df1, df2))) +
+  geom_line(size = 1) +
+  labs(
+    title = "F-distribution Density",
+    x = "F-value",
+    y = "Density",
+    color = "Degrees of freedom\n(df1, df2)"
+  ) +
+  theme_bw(base_size = 18)+
+  theme(
+    legend.position = c(0.8, 0.8),  # Top right inside plot (adjust as needed)
+    legend.background = element_rect(fill = alpha('white', 0.6), color = NA)  # semi-transparent background
+  )
+
+
+# Chi-square distribution density function over x
+library(ggplot2)
+
+# Function to generate chi-square data for multiple dfs
+plot_chisq_multiple <- function(dfs) {
+  x <- seq(0, 25, length.out = 500)
+  data <- do.call(rbind, lapply(dfs, function(df) {
+    data.frame(
+      x = x,
+      y = dchisq(x, df),
+      df = as.factor(df)
+    )
+  }))
+  return(data)
+}
+
+# Degrees of freedom to plot
+dfs <- c(1, 3, 5)
+
+# Generate data
+chisq_data <- plot_chisq_multiple(dfs)
+
+# Plot
+ggplot(chisq_data, aes(x = x, y = y, color = df)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Chi-square Distribution Densities",
+    x = "Chi-sq value",
+    y = "Density",
+    color = "Degrees of freedom"
+  ) +
+  lims(y=c(0,1), x=c(0,15))+
+  theme_bw(base_size = 18)+
+  theme(
+    legend.position = c(0.8, 0.8),  # Top right inside plot (adjust as needed)
+    legend.background = element_rect(fill = alpha('white', 0.6), color = NA)  # semi-transparent background
+  )

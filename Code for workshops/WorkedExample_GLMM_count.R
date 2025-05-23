@@ -7,6 +7,7 @@ library(agridat)
 library(glmmTMB)
 library(DHARMa)
 library(easystats)
+library(broom.mixed)
 
 # Beall webworm data example ####
 ## Load in and read about the beall.webworms dataset. #### 
@@ -48,12 +49,12 @@ mod_logtrans <- glmmTMB(log(y+1) ~ spray * lead , data=d1) # log-transformed mod
 
 
 # STEP 2. Examine residuals and test for overdispersion ####
-## check residuals from the log-transformed model ####
+## check conventional residuals from the log-transformed model ####
 plot(resid(mod_logtrans)~fitted(mod_logtrans))  ## residuals should be evenly dispersed
 abline(h=0)
-
 qqPlot(resid(mod_logtrans)) # points should line up on the line
 
+## check simulated residuals ####
 plot(simulateResiduals(mod_logtrans)) ## DHARMa package simulated residuals
 
 ## Step 1b. update model with poisson distribution for count data ####
@@ -81,10 +82,6 @@ mod_nbinom_blk <- glmmTMB(y ~ spray * lead + (1|block), data=d1, family="nbinom2
 plot(simulateResiduals(mod_nbinom_blk)) ## DHARMa package simulated residuals
 check_overdispersion(mod_nbinom_blk) # overdispersion ratio calculator from performance
 
-# STEP 3. Check model basics, fixed effects, random effects, family/link ####
-summary(mod_nbinom_blk)
-
-
 ## The last two models differ only random effects. Fixed effects are the same.
 ## Can use AIC (or likelihood ratio) for selecting the most appropriate random effects.
 ## If the random effect was part of your experimental design you don't need to do this (just keep block in!; but we will demo)
@@ -92,6 +89,14 @@ summary(mod_nbinom_blk)
 AIC(mod_nbinom, mod_nbinom_blk)  # compare AIC for models without and with block   
 anova(mod_nbinom, mod_nbinom_blk) # likelihood ratio test for models without and with block
 
+
+# STEP 3. Check model basics, fixed effects, random effects, family/link ####
+summary(mod_nbinom_blk)
+
+## check random effect values
+blk_vals <- tidy(mod_nbinom_blk, effects="ran_vals") %>% select(-component, -group)
+blk_vals
+var(blk_vals$estimate) ## variance of the random effect (block) estimate is (roughly) the variance component
 
 # STEP 4. Check significance ####
 Anova(mod_nbinom_blk) # Anova function from car package
