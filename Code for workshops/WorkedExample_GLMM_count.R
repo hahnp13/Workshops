@@ -8,6 +8,8 @@ library(glmmTMB)
 library(DHARMa)
 library(easystats)
 library(broom.mixed)
+library(multcomp)
+library(multcompView)
 
 # Beall webworm data example ####
 ## Load in and read about the beall.webworms dataset. #### 
@@ -18,7 +20,7 @@ data("beall.webworms")
 d1 <- beall.webworms
 ?beall.webworms  ## info about the beall.webworms dataset
 head(d1) ## view data set
-
+str(d1)
 # STEP 0. examine plot of data ####
 hist(d1$y)
 
@@ -110,8 +112,9 @@ emmeans(mod_nbinom_blk, ~ spray:lead, type="response") # means on count-scale
 emmeans(mod_nbinom_blk, pairwise ~ spray:lead, type="response") # means back-transformed 
 
 ## if you want compact-letter display (note the messages): ####
-mod_emm <- emmeans(mod_nbinom_blk, ~ spray:lead, type="response")
-multcomp::cld(mod_emm, Letters="ABCD", alpha=.05)
+mod_emm <- emmeans(mod_nbinom_blk, ~ spray:lead, type="response") |>
+multcomp::cld(Letters="ABCD", alpha=.05)
+mod_emm
 
 # STEP 7. Calculate R2m and R2c ####
 r2(mod_nbinom_blk)
@@ -120,8 +123,32 @@ icc(mod_nbinom_blk)
 # STEP 8. Make figure ####
 
 ## boxplot of original data
+ggplot(data = beall.webworms, 
+       mapping = aes(x = trt, y = y)) +
+  geom_boxplot() +
+  labs(x = "Treatment (Spray x Lead)",y = "Counts of Webworms") +
+  theme_modern()
 
 ## bar plot from emmeans with SE
+ggplot(data = mod_emm, 
+       mapping =  aes(x = interaction(spray, lead),y = response)) +
+  geom_col(fill = "#c9cfd2", color = "black", width = 0.7) +  
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL), width = 0.1) +
+  geom_text(aes(label = .group, y = asymp.UCL + 0.05), size = 5, vjust = 0.1) +
+  labs(x = "Treatment (Spray × Lead)", y = "Counts of Webworms ± 95% CI") +
+  theme_modern()
 
-## emmeans point_range w/ data points w/ facet
+## Points
+ggplot(data = mod_emm, 
+       mapping =  aes(x = interaction(spray, lead), 
+                      y = response)) +
+  geom_point(size = 4, alpha = 0.7) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL), width = 0.1, alpha = 0.7) +
+  geom_text(aes(label = .group, y = asymp.UCL + 0.05), size = 5) +
+  labs(x = "Treatment (Spray x Lead)",
+       y = "Counts of Webworms ± 95% CI") +
+  theme_modern()
+
+
+
 
