@@ -129,6 +129,14 @@ ggplot(data = beall.webworms,
   labs(x = "Treatment (Spray x Lead)",y = "Counts of Webworms") +
   theme_modern()
 
+### same with faceting 
+ggplot(data = beall.webworms, 
+       mapping = aes(x = spray, y = y)) +
+  geom_boxplot() +
+  labs(x = "Treatment (Spray x Lead)",y = "Counts of Webworms") +
+  theme_bw()+
+  facet_wrap(~lead)
+
 ## bar plot from emmeans with SE
 ggplot(data = mod_emm, 
        mapping =  aes(x = interaction(spray, lead),y = response)) +
