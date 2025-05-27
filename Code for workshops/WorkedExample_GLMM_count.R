@@ -96,7 +96,7 @@ anova(mod_nbinom, mod_nbinom_blk) # likelihood ratio test for models without and
 summary(mod_nbinom_blk)
 
 ## check random effect values
-blk_vals <- tidy(mod_nbinom_blk, effects="ran_vals") %>% select(-component, -group)
+blk_vals <- tidy(mod_nbinom_blk, effects="ran_vals") %>% dplyr::select(-component, -group)
 blk_vals
 var(blk_vals$estimate) ## variance of the random effect (block) estimate is (roughly) the variance component
 
