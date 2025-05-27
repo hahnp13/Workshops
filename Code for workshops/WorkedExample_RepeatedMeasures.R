@@ -63,12 +63,15 @@ Anova(mod4)   # all terms highly significant
 
 
 
-#### 3. Does water use differ between the species at these three time points: 175, 225, and 275 days?
+# STEP 5-6. CALCULATE MEANS AND CONTRASTS #### 
+## Does water use differ between the species at these three time points: 175, 225, and 275 days?
 emmeans(mod4, pairwise ~ species|day, at=list(day=c(175,225,275))) # no difference early, but yes later on
 
+# STEP 7. CALCULATE R2 ####
+r2(mod4) ## NOTE: doesn't recognize autoregressive structure 
 
 
-## plot data with ggplot; close approximation of model
+# STEP 8. plot data with ggplot; close approximation of model ####
 
 # LINEAR MODEL
 ggplot(data=wat, aes(x=day, y=water, color=species))+
