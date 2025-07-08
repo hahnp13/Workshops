@@ -110,6 +110,7 @@ emmeans(mod_nbinom_blk, ~ spray:lead, type="response") # means on count-scale
 
 # STEP 6. Calculate contrasts, also using emmeans          ####
 emmeans(mod_nbinom_blk, pairwise ~ spray:lead, type="response") # means back-transformed 
+emmeans(mod_nbinom_blk, pairwise ~ spray:lead, type="response", adjust="none") # means back-transformed 
 
 ## if you want compact-letter display (note the messages): ####
 mod_emm <- emmeans(mod_nbinom_blk, ~ spray:lead, type="response") |>
