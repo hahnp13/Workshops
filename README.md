@@ -5,7 +5,7 @@ The powerpoint slides can found in the 'Slides and materials folders'
 
 The code can be found in the 'Code for workshops' folder. In here, you will find one folder with the R code and one for the SAS code.
 
-## Steps for prepare to run the SAS code
+## Steps for preparing to run the SAS code
 
 1)  Copy the 4 codes entitled “00_BasicHouseKepeing” “01_Cleaning” “02_Glimmix” “mult_letter” into your own folder
 2)  Copy the Excel file “beall.webworms” into your folder
