@@ -1,4 +1,5 @@
 library(ggplot2)
+library(tidyverse)
 
 # Set parameters for the normal distribution ####
 mu <- 0      # mean
@@ -74,10 +75,42 @@ ggplot(curve_data, aes(x = x, y = density)) +
   facet_wrap(~ group, nrow = 2) +
   theme_bw(base_size = 18)
 
-# neg binom histos ####
+# binomial histos ####
 library(ggplot2)
-library(dplyr)
-library(tidyr)
+
+# Set parameters
+n_trials <- 100  # number of binary trials
+p <- 0.2         # probability of success
+
+# Simulate binary outcomes (0s and 1s)
+set.seed(123)  # for reproducibility
+trial_results <- rbinom(n_trials, size = 1, prob = p)
+
+# Create a data frame from simulated results
+sim_data <- data.frame(outcome = factor(trial_results, levels = c(0, 1)))
+
+# Count the number of successes (1s) and failures (0s)
+count_data <- as.data.frame(table(sim_data))
+
+# Create a plot with bars for the outcomes and a single vertical line for probability of success
+binplot <- ggplot(count_data, aes(x = outcome, y = Freq)) +
+  geom_bar(stat = "identity", fill = "lightblue", color="black", alpha = 0.7, width = .1) +
+  geom_vline(xintercept = 1.2, color = "black", linetype = "dashed", size = 1.2) +
+  annotate("text", x = 1.4, y = max(count_data$Freq) - 15, 
+           label = paste("Prob = 0.20"),
+           color = "black", vjust = -0.5, size = 5) +
+  labs(#title = paste("Outcomes of", n_trials, "Binary Trials (p =", p, ")"),
+       x = "Outcome (0 = Failure, 1 = Success)", 
+       y = "Count") +
+  theme_bw(base_size=18) +
+  ylim(0, max(count_data$Freq) + 10)  # Manual y-limits to accommodate text
+ggsave(binplot, file="binplot.tiff", width=4.5, height=3, dpi=600, compression = "lzw")
+
+# Combine plots using gridExtra
+library(gridExtra)
+grid.arrange(plot_outcomes, density_curve, ncol = 1)
+
+# neg binom histos ####
 
 # Define parameters for four Negative Binomial distributions
 params <- tibble(
