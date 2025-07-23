@@ -5,6 +5,8 @@ The powerpoint slides can found in the 'Slides and materials folders'
 
 The code can be found in the 'Code for workshops' folder. In here, you will find one folder with the R code and one for the SAS code.
 
+[**Recording** of the workshop can be found here](https://drive.google.com/file/d/1hhuFvDL6fAwjkN3sdm3nv_F-Pg3CCreG/view?usp=sharing) Note that only the first part recorded with screenshare.
+
 ## Steps for preparing to run the SAS code
 
 1)  Copy the 4 codes entitled “00_BasicHouseKepeing” “01_Cleaning” “02_Glimmix” “mult_letter” into your own folder
