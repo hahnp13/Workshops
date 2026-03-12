@@ -68,4 +68,9 @@ ggplot(penguins_summary, aes(x = species, y = body_mass_mean)) +
                     width = 0.2))
 
 
-  
+## plot points with error bars using pointrange and jitter ####
+ggplot(penguins_summary, aes(x = species, y = body_mass_mean)) +
+  geom_jitter(data = penguins, aes(x = species, y = body_mass_g), width = 0.2)+
+  geom_pointrange(aes(ymin = body_mass_mean - body_mass_sd,
+                      ymax = body_mass_mean + body_mass_sd),
+                  size=2, linewidth = 2, color="blue")       ## note that order of layers matters here!
