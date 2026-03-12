@@ -74,3 +74,23 @@ ggplot(penguins_summary, aes(x = species, y = body_mass_mean)) +
   geom_pointrange(aes(ymin = body_mass_mean - body_mass_sd,
                       ymax = body_mass_mean + body_mass_sd),
                   size=2, linewidth = 2, color="blue")       ## note that order of layers matters here!
+
+
+## ggplot with geom_density_ridges ####
+library(ggridges)
+
+ggplot() +
+  geom_density_ridges(data=penguins, aes(y = species, x = body_mass_g, fill=species),
+                      scale=.5, alpha=0.5) + 
+  geom_jitter(data=penguins, aes(y = species, x = body_mass_g, fill=species), height = 0.1)+
+  geom_pointrange(data=penguins_summary,
+                  aes(y=species, x=body_mass_mean, color=species,
+                      xmin = body_mass_mean - body_mass_sd,
+                      xmax = body_mass_mean + body_mass_sd),
+                  size=1.5, linewidth = 1.5) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)+
+  scale_color_viridis(discrete = TRUE, direction = -1)+
+  theme_bw(base_size = 16)+
+  coord_flip()+
+  labs(x="Body mass (g)", y="Species")
+
