@@ -1,11 +1,12 @@
 # Workshops
-github repo for stats workshops at gcrec, fes, etc created by Phil Hahn, Allan Busuulwa, Alex Bauer, and Emiliee Demard.
+github repo for stats workshops at gcrec, fes, etc created by Phil Hahn, Allan Busuulwa, Alex Bauer, Jake Herschberger, and Emiliee Demard.
 
-The powerpoint slides can found in the 'Slides and materials folders'
+**Next workshop is on July 15, 2026 at 8:00AM at the Florida Entomological Society.** This workshop will focus on 1) stats overview, 2) survival analysis, 3) dose-dependent analysis.
+
+The powerpoint slides can found in the 'Slides and materials folders'.
 
 The code can be found in the 'Code for workshops' folder. In here, you will find one folder with the R code and one for the SAS code.
 
-[**Recording** of the workshop can be found here](https://drive.google.com/file/d/1hhuFvDL6fAwjkN3sdm3nv_F-Pg3CCreG/view?usp=sharing) Note that only the first part recorded with screenshare.
 
 ## Steps for preparing to run the SAS code
 
